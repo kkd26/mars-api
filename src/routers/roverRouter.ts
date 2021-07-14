@@ -1,25 +1,29 @@
 import express from "express";
 import API from "../nasa-api/api";
+import photosRouter from "./photosRouter";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  const data = await API.getAllRoversData();
-  res.json(data);
+router.get("/", (req, res) => {
+  API.getAllRoversData().then((data) => res.json(data));
 });
 
-router.get("/names", async (req, res) => {
-  res.send(API.getRoverNamesList());
+router.get("/names", (req, res) => {
+  API.getRoverNamesList().then((data) => res.json(data));
 });
 
-router.get("/:roverName", async (req, res) => {
+router.get("/:roverName", (req, res) => {
   const { roverName } = req.params;
-  res.send(API.getRoverData(roverName));
+  API.getRoverData(roverName).then((data) => res.json(data));
 });
 
-router.get("/:roverName/photos", async (req, res) => {
-  const { roverName } = req.params;
-  res.send(API.getRoverPhotos(roverName));
-});
+router.use(
+  "/:roverName/photos",
+  (req, res, next) => {
+    res.locals.roverName = req.params.roverName.toLowerCase();
+    next();
+  },
+  photosRouter
+);
 
 export default router;
