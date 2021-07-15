@@ -1,7 +1,6 @@
 import axios from "axios";
 import calculateSol from "../helpers/solCalculation";
 import getQueryParams from "../helpers/getQueryParams";
-import getCameraTypes from "../helpers/getCameraTypes";
 import validateRoverOrThrow from "../helpers/validateRoverName";
 require("dotenv").config();
 
@@ -9,8 +8,14 @@ const { API_KEY } = process.env;
 
 const ROVERS_URL = "https://api.nasa.gov/mars-photos/api/v1/rovers";
 
+interface RoverI {
+  name: string;
+  max_sol: number;
+  cameras: { name: string }[];
+}
+
 interface RoversI {
-  rovers: Array<{ name: string }>;
+  rovers: Array<RoverI>;
 }
 
 export default class API {
@@ -26,14 +31,13 @@ export default class API {
     );
   }
 
-  static getRoverData(roverName: string) {
+  static getRoverData(roverName: string): Promise<RoverI> {
     validateRoverOrThrow(roverName);
     const url = `${ROVERS_URL}/${roverName}?api_key=${API_KEY}`;
     return axios.get(url).then((response) => response.data.rover);
   }
 
   static getRoverPhotos(roverName: string, camera?: string, sol?: number) {
-    validateRoverOrThrow(roverName);
     const url = `${ROVERS_URL}/${roverName}/photos?api_key=${API_KEY}`;
     return API.getRoverData(roverName).then(({ max_sol }) => {
       const day = calculateSol(sol, max_sol);
@@ -45,7 +49,8 @@ export default class API {
   }
 
   static getRoverCameras(roverName: string): Promise<string[]> {
-    validateRoverOrThrow(roverName);
-    return new Promise((res, rej) => res(getCameraTypes(roverName)));
+    return API.getRoverData(roverName).then((roverInfo) =>
+      roverInfo.cameras.map((camera) => camera.name)
+    );
   }
 }
