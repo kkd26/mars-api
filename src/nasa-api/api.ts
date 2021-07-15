@@ -1,6 +1,8 @@
 import axios from "axios";
 import calculateSol from "../helpers/solCalculation";
 import getQueryParams from "../helpers/getQueryParams";
+import getCameraTypes from "../helpers/getCameraTypes";
+import validateRoverOrThrow from "../helpers/validateRoverName";
 require("dotenv").config();
 
 const { API_KEY } = process.env;
@@ -11,22 +13,9 @@ interface RoversI {
   rovers: Array<{ name: string }>;
 }
 
-export enum CameraTypes {
-  FHAZ = "FHAZ",
-  RHAZ = "RHAZ",
-  MAST = "MAST",
-  CHEMCAM = "CHEMCAM",
-  MAHLI = "MAHLI",
-  MARDI = "MARDI",
-  NAVCAM = "NAVCAM",
-  PANCAM = "PANCAM",
-  MINITES = "MINITES",
-}
-
 export default class API {
   static getAllRoversData() {
     const url = `${ROVERS_URL}?api_key=${API_KEY}`;
-
     return axios.get<RoversI>(url).then((response) => response.data.rovers);
   }
 
@@ -38,13 +27,14 @@ export default class API {
   }
 
   static getRoverData(roverName: string) {
+    validateRoverOrThrow(roverName);
     const url = `${ROVERS_URL}/${roverName}?api_key=${API_KEY}`;
     return axios.get(url).then((response) => response.data.rover);
   }
 
   static getRoverPhotos(roverName: string, camera?: string, sol?: number) {
+    validateRoverOrThrow(roverName);
     const url = `${ROVERS_URL}/${roverName}/photos?api_key=${API_KEY}`;
-
     return API.getRoverData(roverName).then(({ max_sol }) => {
       const day = calculateSol(sol, max_sol);
 
@@ -52,5 +42,10 @@ export default class API {
 
       return axios.get(urlFull).then((response) => response.data.photos);
     });
+  }
+
+  static getRoverCameras(roverName: string): Promise<string[]> {
+    validateRoverOrThrow(roverName);
+    return new Promise((res, rej) => res(getCameraTypes(roverName)));
   }
 }

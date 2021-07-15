@@ -14,7 +14,14 @@ router.get("/names", (req, res) => {
 
 router.get("/:roverName", (req, res) => {
   const { roverName } = req.params;
-  API.getRoverData(roverName).then((data) => res.json(data));
+  API.getRoverData(roverName)
+    .then((data) => res.json(data))
+});
+
+router.get("/:roverName/cameras", (req, res) => {
+  const { roverName } = req.params;
+  API.getRoverCameras(roverName)
+    .then((data) => res.json(data))
 });
 
 router.use(
