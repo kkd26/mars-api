@@ -18,6 +18,26 @@ interface RoversI {
   rovers: Array<RoverI>;
 }
 
+interface PhotoI {
+  id: number;
+  sol: number;
+  camera: {
+    id: number;
+    name: string;
+    rover_id: number;
+    full_name: string;
+  };
+  img_src: string;
+  earth_date: string;
+  rover: {
+    id: number;
+    name: string;
+    landing_date: string;
+    launch_date: string;
+    status: string;
+  };
+}
+
 export default class API {
   static getAllRoversData() {
     const url = `${ROVERS_URL}?api_key=${API_KEY}`;
@@ -37,7 +57,7 @@ export default class API {
     return axios.get(url).then((response) => response.data.rover);
   }
 
-  static getRoverPhotos(roverName: string, camera?: string, sol?: number) {
+  static getRoverPhotos(roverName: string, camera?: string, sol?: number): Promise<PhotoI[]> {
     const url = `${ROVERS_URL}/${roverName}/photos?api_key=${API_KEY}`;
     return API.getRoverData(roverName).then(({ max_sol }) => {
       const day = calculateSol(sol, max_sol);
