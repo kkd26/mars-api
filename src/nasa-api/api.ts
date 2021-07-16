@@ -11,7 +11,7 @@ const ROVERS_URL = "https://api.nasa.gov/mars-photos/api/v1/rovers";
 interface RoverI {
   name: string;
   max_sol: number;
-  cameras: { name: string }[];
+  cameras: { name: string; full_name: string }[];
 }
 
 interface RoversI {
@@ -57,7 +57,11 @@ export default class API {
     return axios.get(url).then((response) => response.data.rover);
   }
 
-  static getRoverPhotos(roverName: string, camera?: string, sol?: number): Promise<PhotoI[]> {
+  static getRoverPhotos(
+    roverName: string,
+    camera?: string,
+    sol?: number
+  ): Promise<PhotoI[]> {
     const url = `${ROVERS_URL}/${roverName}/photos?api_key=${API_KEY}`;
     return API.getRoverData(roverName).then(({ max_sol }) => {
       const day = calculateSol(sol, max_sol);
@@ -68,9 +72,13 @@ export default class API {
     });
   }
 
-  static getRoverCameras(roverName: string): Promise<string[]> {
+  static getRoverCameras(
+    roverName: string
+  ): Promise<{ name: string; full_name: string }[]> {
     return API.getRoverData(roverName).then((roverInfo) =>
-      roverInfo.cameras.map((camera) => camera.name)
+      roverInfo.cameras.map(({ name, full_name }) => {
+        return { name, full_name };
+      })
     );
   }
 }
