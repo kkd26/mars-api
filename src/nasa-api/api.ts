@@ -1,32 +1,46 @@
 import axios from "axios";
 import calculateSol from "../helpers/solCalculation";
 import getQueryParams from "../helpers/getQueryParams";
+import validateRoverOrThrow from "../helpers/validateRoverName";
 require("dotenv").config();
 
 const { API_KEY } = process.env;
 
 const ROVERS_URL = "https://api.nasa.gov/mars-photos/api/v1/rovers";
 
-interface RoversI {
-  rovers: Array<{ name: string }>;
+interface RoverI {
+  name: string;
+  max_sol: number;
+  cameras: { name: string; full_name: string }[];
 }
 
-export enum CameraTypes {
-  FHAZ = "FHAZ",
-  RHAZ = "RHAZ",
-  MAST = "MAST",
-  CHEMCAM = "CHEMCAM",
-  MAHLI = "MAHLI",
-  MARDI = "MARDI",
-  NAVCAM = "NAVCAM",
-  PANCAM = "PANCAM",
-  MINITES = "MINITES",
+interface RoversI {
+  rovers: Array<RoverI>;
+}
+
+interface PhotoI {
+  id: number;
+  sol: number;
+  camera: {
+    id: number;
+    name: string;
+    rover_id: number;
+    full_name: string;
+  };
+  img_src: string;
+  earth_date: string;
+  rover: {
+    id: number;
+    name: string;
+    landing_date: string;
+    launch_date: string;
+    status: string;
+  };
 }
 
 export default class API {
   static getAllRoversData() {
     const url = `${ROVERS_URL}?api_key=${API_KEY}`;
-
     return axios.get<RoversI>(url).then((response) => response.data.rovers);
   }
 
@@ -37,14 +51,18 @@ export default class API {
     );
   }
 
-  static getRoverData(roverName: string) {
+  static getRoverData(roverName: string): Promise<RoverI> {
+    validateRoverOrThrow(roverName);
     const url = `${ROVERS_URL}/${roverName}?api_key=${API_KEY}`;
     return axios.get(url).then((response) => response.data.rover);
   }
 
-  static getRoverPhotos(roverName: string, camera?: string, sol?: number) {
+  static getRoverPhotos(
+    roverName: string,
+    camera?: string,
+    sol?: number
+  ): Promise<PhotoI[]> {
     const url = `${ROVERS_URL}/${roverName}/photos?api_key=${API_KEY}`;
-
     return API.getRoverData(roverName).then(({ max_sol }) => {
       const day = calculateSol(sol, max_sol);
 
@@ -52,5 +70,15 @@ export default class API {
 
       return axios.get(urlFull).then((response) => response.data.photos);
     });
+  }
+
+  static getRoverCameras(
+    roverName: string
+  ): Promise<{ name: string; full_name: string }[]> {
+    return API.getRoverData(roverName).then((roverInfo) =>
+      roverInfo.cameras.map(({ name, full_name }) => {
+        return { name, full_name };
+      })
+    );
   }
 }

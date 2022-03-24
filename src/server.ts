@@ -1,10 +1,14 @@
 import express from "express";
 import roverRouter from "./routers/roverRouter";
 import createError from "http-errors";
+import cors from "cors";
+import  logger from 'morgan';
 
 const app = express();
 const port = 8000;
 
+app.use(logger('dev'));
+app.use(cors());
 app.use(express.json());
 app.on("error", () => {
   throw new Error("test error");
@@ -27,5 +31,6 @@ app.use(function (err: any, req: any, res: any, next: any) {
 
   // render the error page
   res.status(err.status || 500);
-  res.send("error");
+  res.send(err);
 });
+//

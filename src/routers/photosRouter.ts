@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get("/", (req, res) => {
   const roverName = res.locals.roverName;
-  const { sol } = req.query;
-  API.getRoverPhotos(roverName, undefined, Number(sol)).then((data) =>
+  const { sol, camera } = req.query;
+  API.getRoverPhotos(roverName, camera && camera.toString(), Number(sol)).then((data) =>
     res.json(data)
   );
 });

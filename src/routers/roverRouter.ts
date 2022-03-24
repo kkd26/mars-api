@@ -17,6 +17,11 @@ router.get("/:roverName", (req, res) => {
   API.getRoverData(roverName).then((data) => res.json(data));
 });
 
+router.get("/:roverName/cameras", (req, res) => {
+  const { roverName } = req.params;
+  API.getRoverCameras(roverName).then((data) => res.json(data));
+});
+
 router.use(
   "/:roverName/photos",
   (req, res, next) => {
